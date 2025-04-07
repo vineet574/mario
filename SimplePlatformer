@@ -1,15 +1,15 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 
 public class SimplePlatformer extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
     private int x = 50, y = 200;
     private int velocityY = 0;
+    private int velocityX = 0;
     private boolean isJumping = false;
+    private boolean canDoubleJump = true;
+    private int score = 0;
 
     public SimplePlatformer() {
         timer = new Timer(20, this);
@@ -27,6 +27,9 @@ public class SimplePlatformer extends JPanel implements ActionListener, KeyListe
         g.fillRect(0, 250, 400, 50);
         g.setColor(Color.RED);
         g.fillRect(x, y, 30, 30);
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        g.drawString("Score: " + score, 10, 20);
     }
 
     @Override
@@ -35,25 +38,51 @@ public class SimplePlatformer extends JPanel implements ActionListener, KeyListe
             velocityY += 1;
         } else {
             isJumping = false;
+            canDoubleJump = true;
             velocityY = 0;
+            y = 200;
         }
 
         y += velocityY;
+        x += velocityX;
 
-        if (y > 200) y = 200;
+        if (x < 0) x = 0;
+        if (x > 370) x = 370;
+
+        score++;
+
         repaint();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_SPACE && !isJumping) {
-            isJumping = true;
-            velocityY = -15;
+        int code = e.getKeyCode();
+        if (code == KeyEvent.VK_SPACE) {
+            if (!isJumping) {
+                isJumping = true;
+                velocityY = -15;
+            } else if (canDoubleJump) {
+                velocityY = -12;
+                canDoubleJump = false;
+            }
+        }
+
+        if (code == KeyEvent.VK_LEFT) {
+            velocityX = -5;
+        }
+
+        if (code == KeyEvent.VK_RIGHT) {
+            velocityX = 5;
         }
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void keyReleased(KeyEvent e) {
+        int code = e.getKeyCode();
+        if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_RIGHT) {
+            velocityX = 0;
+        }
+    }
 
     @Override
     public void keyTyped(KeyEvent e) {}
