@@ -40,6 +40,13 @@ Score — Based on how long the player survives.
 
 Improved jump physics.
 
+✅ How to Play:
+← / → to move.
 
+SPACE to jump.
+
+Double jump is allowed once in air.
+
+Score increases over time.
 
 
