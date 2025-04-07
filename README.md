@@ -27,3 +27,19 @@ This is a basic platformer game written in Java, where the player controls a cha
 - Implement scoring and level progression.
 
 
+Here are some new features added to your simple platformer:
+
+✅ New Features:
+Left/Right movement (←, → arrow keys).
+
+Platform boundaries — Player can't go off-screen.
+
+Double jump support.
+
+Score — Based on how long the player survives.
+
+Improved jump physics.
+
+
+
+
