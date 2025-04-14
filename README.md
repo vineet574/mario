@@ -50,3 +50,13 @@ Double jump is allowed once in air.
 Score increases over time.
 
 
+Added Features:
+Collectible Coins: Players can collect coins to increase their score.
+
+Obstacles: Avoid obstacles that deduct points if hit.
+
+Game Over Condition: Ends the game if the player collides with an obstacle.
+
+Restart Option: Allows the player to restart the game.
+
+
