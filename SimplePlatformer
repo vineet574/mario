@@ -1,22 +1,45 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Random;
 
-public class SimplePlatformer extends JPanel implements ActionListener, KeyListener {
+public class EnhancedPlatformer extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
     private int x = 50, y = 200;
-    private int velocityY = 0;
-    private int velocityX = 0;
-    private boolean isJumping = false;
-    private boolean canDoubleJump = true;
+    private int velocityY = 0, velocityX = 0;
+    private boolean isJumping = false, canDoubleJump = true;
     private int score = 0;
+    private boolean isGameOver = false;
 
-    public SimplePlatformer() {
+    private ArrayList<Point> coins;
+    private ArrayList<Point> obstacles;
+
+    public EnhancedPlatformer() {
         timer = new Timer(20, this);
         timer.start();
         addKeyListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
+
+        coins = new ArrayList<>();
+        obstacles = new ArrayList<>();
+        generateCoins();
+        generateObstacles();
+    }
+
+    private void generateCoins() {
+        Random rand = new Random();
+        for (int i = 0; i < 5; i++) {
+            coins.add(new Point(rand.nextInt(350) + 10, 220));
+        }
+    }
+
+    private void generateObstacles() {
+        Random rand = new Random();
+        for (int i = 0; i < 3; i++) {
+            obstacles.add(new Point(rand.nextInt(350) + 10, 220));
+        }
     }
 
     @Override
@@ -25,54 +48,98 @@ public class SimplePlatformer extends JPanel implements ActionListener, KeyListe
         setBackground(Color.CYAN);
         g.setColor(Color.GREEN);
         g.fillRect(0, 250, 400, 50);
-        g.setColor(Color.RED);
-        g.fillRect(x, y, 30, 30);
-        g.setColor(Color.BLACK);
-        g.setFont(new Font("Arial", Font.BOLD, 14));
-        g.drawString("Score: " + score, 10, 20);
+
+        if (!isGameOver) {
+            g.setColor(Color.RED);
+            g.fillRect(x, y, 30, 30);
+
+            g.setColor(Color.YELLOW);
+            for (Point coin : coins) {
+                g.fillOval(coin.x, coin.y, 10, 10);
+            }
+
+            g.setColor(Color.BLACK);
+            for (Point obstacle : obstacles) {
+                g.fillRect(obstacle.x, obstacle.y, 20, 20);
+            }
+
+            g.setColor(Color.BLACK);
+            g.setFont(new Font("Arial", Font.BOLD, 14));
+            g.drawString("Score: " + score, 10, 20);
+        } else {
+            g.setFont(new Font("Arial", Font.BOLD, 20));
+            g.setColor(Color.RED);
+            g.drawString("Game Over!", 150, 150);
+            g.setFont(new Font("Arial", Font.PLAIN, 14));
+            g.drawString("Press R to Restart", 150, 180);
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (y < 200) {
-            velocityY += 1;
-        } else {
-            isJumping = false;
-            canDoubleJump = true;
-            velocityY = 0;
-            y = 200;
+        if (!isGameOver) {
+            if (y < 200) {
+                velocityY += 1;
+            } else {
+                isJumping = false;
+                canDoubleJump = true;
+                velocityY = 0;
+                y = 200;
+            }
+
+            y += velocityY;
+            x += velocityX;
+
+            if (x < 0) x = 0;
+            if (x > 370) x = 370;
+
+            checkCollisions();
+
+            repaint();
         }
+    }
 
-        y += velocityY;
-        x += velocityX;
+    private void checkCollisions() {
+        coins.removeIf(coin -> {
+            if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(coin.x, coin.y, 10, 10))) {
+                score += 10;
+                return true;
+            }
+            return false;
+        });
 
-        if (x < 0) x = 0;
-        if (x > 370) x = 370;
-
-        score++;
-
-        repaint();
+        for (Point obstacle : obstacles) {
+            if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(obstacle.x, obstacle.y, 20, 20))) {
+                isGameOver = true;
+                repaint();
+                break;
+            }
+        }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
-        if (code == KeyEvent.VK_SPACE) {
-            if (!isJumping) {
-                isJumping = true;
-                velocityY = -15;
-            } else if (canDoubleJump) {
-                velocityY = -12;
-                canDoubleJump = false;
+        if (!isGameOver) {
+            if (code == KeyEvent.VK_SPACE) {
+                if (!isJumping) {
+                    isJumping = true;
+                    velocityY = -15;
+                } else if (canDoubleJump) {
+                    velocityY = -12;
+                    canDoubleJump = false;
+                }
             }
-        }
 
-        if (code == KeyEvent.VK_LEFT) {
-            velocityX = -5;
-        }
+            if (code == KeyEvent.VK_LEFT) {
+                velocityX = -5;
+            }
 
-        if (code == KeyEvent.VK_RIGHT) {
-            velocityX = 5;
+            if (code == KeyEvent.VK_RIGHT) {
+                velocityX = 5;
+            }
+        } else if (code == KeyEvent.VK_R) {
+            restartGame();
         }
     }
 
@@ -87,9 +154,25 @@ public class SimplePlatformer extends JPanel implements ActionListener, KeyListe
     @Override
     public void keyTyped(KeyEvent e) {}
 
+    private void restartGame() {
+        x = 50;
+        y = 200;
+        velocityY = 0;
+        velocityX = 0;
+        isJumping = false;
+        canDoubleJump = true;
+        score = 0;
+        isGameOver = false;
+        coins.clear();
+        obstacles.clear();
+        generateCoins();
+        generateObstacles();
+        repaint();
+    }
+
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Simple Platformer");
-        SimplePlatformer platformer = new SimplePlatformer();
+        JFrame frame = new JFrame("Enhanced Platformer");
+        EnhancedPlatformer platformer = new EnhancedPlatformer();
         frame.add(platformer);
         frame.setSize(400, 300);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
