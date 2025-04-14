@@ -60,3 +60,15 @@ Game Over Condition: Ends the game if the player collides with an obstacle.
 Restart Option: Allows the player to restart the game.
 
 
+
+
+Features Explained:
+Coins: Yellow circles the player can collect to gain points.
+
+Obstacles: Black squares that end the game on collision.
+
+Game Over: Displays "Game Over!" with a restart message when the player hits an obstacle.
+
+Restart: Press "R" to restart the game, resetting all variables and regenerating coins and obstacles.
+
+
