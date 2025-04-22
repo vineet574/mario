@@ -11,9 +11,11 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     private boolean isJumping = false, canDoubleJump = true;
     private int score = 0;
     private boolean isGameOver = false;
+    private boolean hasSpeedBoost = false;
 
     private ArrayList<Point> coins;
     private ArrayList<Point> obstacles;
+    private ArrayList<Point> powerUps;
 
     public EnhancedPlatformer() {
         timer = new Timer(20, this);
@@ -24,8 +26,10 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
 
         coins = new ArrayList<>();
         obstacles = new ArrayList<>();
+        powerUps = new ArrayList<>();
         generateCoins();
         generateObstacles();
+        generatePowerUps();
     }
 
     private void generateCoins() {
@@ -39,6 +43,13 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         Random rand = new Random();
         for (int i = 0; i < 3; i++) {
             obstacles.add(new Point(rand.nextInt(350) + 10, 220));
+        }
+    }
+
+    private void generatePowerUps() {
+        Random rand = new Random();
+        for (int i = 0; i < 2; i++) {
+            powerUps.add(new Point(rand.nextInt(350) + 10, 180));
         }
     }
 
@@ -63,9 +74,19 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
                 g.fillRect(obstacle.x, obstacle.y, 20, 20);
             }
 
+            g.setColor(Color.PINK);
+            for (Point powerUp : powerUps) {
+                g.fillOval(powerUp.x, powerUp.y, 15, 15);
+            }
+
             g.setColor(Color.BLACK);
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.drawString("Score: " + score, 10, 20);
+
+            if (hasSpeedBoost) {
+                g.setColor(Color.BLUE);
+                g.drawString("Speed Boost Active!", 250, 20);
+            }
         } else {
             g.setFont(new Font("Arial", Font.BOLD, 20));
             g.setColor(Color.RED);
@@ -95,6 +116,10 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
 
             checkCollisions();
 
+            if (hasSpeedBoost) {
+                velocityX = 10;  // Increased speed with boost
+            }
+
             repaint();
         }
     }
@@ -115,6 +140,14 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
                 break;
             }
         }
+
+        powerUps.removeIf(powerUp -> {
+            if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(powerUp.x, powerUp.y, 15, 15))) {
+                hasSpeedBoost = true;
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override
@@ -163,10 +196,13 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         canDoubleJump = true;
         score = 0;
         isGameOver = false;
+        hasSpeedBoost = false;
         coins.clear();
         obstacles.clear();
+        powerUps.clear();
         generateCoins();
         generateObstacles();
+        generatePowerUps();
         repaint();
     }
 
