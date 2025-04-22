@@ -73,3 +73,8 @@ Restart: Press "R" to restart the game, resetting all variables and regenerating
 
 New Features Added:
 Power-Ups: These are small pink circles that appear on the screen. When the player character touches one, it activates a speed boost.
+
+
+Speed Boost: When a player collects a power-up, their movement speed increases, allowing them to move faster.
+
+Game Feedback: A message is displayed on the screen when the speed boost is active.
