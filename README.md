@@ -71,4 +71,5 @@ Game Over: Displays "Game Over!" with a restart message when the player hits an 
 
 Restart: Press "R" to restart the game, resetting all variables and regenerating coins and obstacles.
 
-
+New Features Added:
+Power-Ups: These are small pink circles that appear on the screen. When the player character touches one, it activates a speed boost.
