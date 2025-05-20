@@ -10,12 +10,16 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     private int velocityY = 0, velocityX = 0;
     private boolean isJumping = false, canDoubleJump = true;
     private int score = 0;
+    private int health = 3;
     private boolean isGameOver = false;
     private boolean hasSpeedBoost = false;
+    private boolean isPaused = false;
+    private int powerUpTimer = 0;
 
     private ArrayList<Point> coins;
     private ArrayList<Point> obstacles;
     private ArrayList<Point> powerUps;
+    private ArrayList<Point> enemies;
 
     public EnhancedPlatformer() {
         timer = new Timer(20, this);
@@ -27,9 +31,12 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         coins = new ArrayList<>();
         obstacles = new ArrayList<>();
         powerUps = new ArrayList<>();
+        enemies = new ArrayList<>();
+
         generateCoins();
         generateObstacles();
         generatePowerUps();
+        generateEnemies();
     }
 
     private void generateCoins() {
@@ -53,6 +60,13 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         }
     }
 
+    private void generateEnemies() {
+        Random rand = new Random();
+        for (int i = 0; i < 2; i++) {
+            enemies.add(new Point(rand.nextInt(350) + 10, 220));
+        }
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -62,7 +76,7 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
 
         if (!isGameOver) {
             g.setColor(Color.RED);
-            g.fillRect(x, y, 30, 30);
+            g.fillRect(x, y, 30, 30); // player
 
             g.setColor(Color.YELLOW);
             for (Point coin : coins) {
@@ -79,26 +93,38 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
                 g.fillOval(powerUp.x, powerUp.y, 15, 15);
             }
 
+            g.setColor(Color.MAGENTA);
+            for (Point enemy : enemies) {
+                g.fillRect(enemy.x, enemy.y, 20, 20);
+            }
+
             g.setColor(Color.BLACK);
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.drawString("Score: " + score, 10, 20);
+            g.drawString("Health: " + health, 300, 40);
 
             if (hasSpeedBoost) {
                 g.setColor(Color.BLUE);
-                g.drawString("Speed Boost Active!", 250, 20);
+                g.drawString("Speed Boost Active!", 230, 20);
+            }
+
+            if (isPaused) {
+                g.setFont(new Font("Arial", Font.BOLD, 18));
+                g.setColor(Color.BLUE);
+                g.drawString("Paused", 160, 120);
             }
         } else {
             g.setFont(new Font("Arial", Font.BOLD, 20));
             g.setColor(Color.RED);
-            g.drawString("Game Over!", 150, 150);
+            g.drawString("Game Over!", 140, 150);
             g.setFont(new Font("Arial", Font.PLAIN, 14));
-            g.drawString("Press R to Restart", 150, 180);
+            g.drawString("Press R to Restart", 140, 180);
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!isGameOver) {
+        if (!isPaused && !isGameOver) {
             if (y < 200) {
                 velocityY += 1;
             } else {
@@ -114,12 +140,16 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
             if (x < 0) x = 0;
             if (x > 370) x = 370;
 
-            checkCollisions();
-
             if (hasSpeedBoost) {
-                velocityX = 10;  // Increased speed with boost
+                velocityX = 10;
+                powerUpTimer++;
+                if (powerUpTimer > 200) {
+                    hasSpeedBoost = false;
+                    powerUpTimer = 0;
+                }
             }
 
+            checkCollisions();
             repaint();
         }
     }
@@ -144,16 +174,28 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         powerUps.removeIf(powerUp -> {
             if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(powerUp.x, powerUp.y, 15, 15))) {
                 hasSpeedBoost = true;
+                powerUpTimer = 0;
                 return true;
             }
             return false;
         });
+
+        for (Point enemy : enemies) {
+            if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(enemy.x, enemy.y, 20, 20))) {
+                health--;
+                if (health <= 0) {
+                    isGameOver = true;
+                }
+                repaint();
+                break;
+            }
+        }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
-        if (!isGameOver) {
+        if (!isGameOver && !isPaused) {
             if (code == KeyEvent.VK_SPACE) {
                 if (!isJumping) {
                     isJumping = true;
@@ -165,14 +207,21 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
             }
 
             if (code == KeyEvent.VK_LEFT) {
-                velocityX = -5;
+                velocityX = hasSpeedBoost ? -10 : -5;
             }
 
             if (code == KeyEvent.VK_RIGHT) {
-                velocityX = 5;
+                velocityX = hasSpeedBoost ? 10 : 5;
             }
-        } else if (code == KeyEvent.VK_R) {
+        }
+
+        if (code == KeyEvent.VK_R && isGameOver) {
             restartGame();
+        }
+
+        if (code == KeyEvent.VK_P) {
+            isPaused = !isPaused;
+            repaint();
         }
     }
 
@@ -195,14 +244,22 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         isJumping = false;
         canDoubleJump = true;
         score = 0;
+        health = 3;
         isGameOver = false;
+        isPaused = false;
         hasSpeedBoost = false;
+        powerUpTimer = 0;
+
         coins.clear();
         obstacles.clear();
         powerUps.clear();
+        enemies.clear();
+
         generateCoins();
         generateObstacles();
         generatePowerUps();
+        generateEnemies();
+
         repaint();
     }
 
