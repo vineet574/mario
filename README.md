@@ -78,3 +78,14 @@ Power-Ups: These are small pink circles that appear on the screen. When the play
 Speed Boost: When a player collects a power-up, their movement speed increases, allowing them to move faster.
 
 Game Feedback: A message is displayed on the screen when the speed boost is active.
+ New Features Added:
+Health System
+
+Enemy Characters
+
+Timed Power-Ups
+
+Pause/Resume Feature
+
+Background Music Toggle (structure only, no audio engine)
+
