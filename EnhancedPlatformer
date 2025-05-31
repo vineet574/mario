@@ -9,17 +9,17 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     private int x = 50, y = 200;
     private int velocityY = 0, velocityX = 0;
     private boolean isJumping = false, canDoubleJump = true;
-    private int score = 0;
-    private int health = 3;
-    private boolean isGameOver = false;
-    private boolean hasSpeedBoost = false;
-    private boolean isPaused = false;
-    private int powerUpTimer = 0;
+    private int score = 0, health = 3;
+    private boolean isGameOver = false, hasSpeedBoost = false, isPaused = false;
+    private int powerUpTimer = 0, invincibilityTimer = 0;
+    private boolean isInvincible = false;
+    private long startTime = System.currentTimeMillis();
+    private Point checkpoint = new Point(50, 200);
 
-    private ArrayList<Point> coins;
-    private ArrayList<Point> obstacles;
-    private ArrayList<Point> powerUps;
-    private ArrayList<Point> enemies;
+    private ArrayList<Point> coins = new ArrayList<>();
+    private ArrayList<Point> obstacles = new ArrayList<>();
+    private ArrayList<Point> powerUps = new ArrayList<>();
+    private ArrayList<Point> enemies = new ArrayList<>();
 
     public EnhancedPlatformer() {
         timer = new Timer(20, this);
@@ -27,12 +27,6 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         addKeyListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
-
-        coins = new ArrayList<>();
-        obstacles = new ArrayList<>();
-        powerUps = new ArrayList<>();
-        enemies = new ArrayList<>();
-
         generateCoins();
         generateObstacles();
         generatePowerUps();
@@ -41,30 +35,22 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
 
     private void generateCoins() {
         Random rand = new Random();
-        for (int i = 0; i < 5; i++) {
-            coins.add(new Point(rand.nextInt(350) + 10, 220));
-        }
+        for (int i = 0; i < 5; i++) coins.add(new Point(rand.nextInt(350) + 10, 220));
     }
 
     private void generateObstacles() {
         Random rand = new Random();
-        for (int i = 0; i < 3; i++) {
-            obstacles.add(new Point(rand.nextInt(350) + 10, 220));
-        }
+        for (int i = 0; i < 3; i++) obstacles.add(new Point(rand.nextInt(350) + 10, 220));
     }
 
     private void generatePowerUps() {
         Random rand = new Random();
-        for (int i = 0; i < 2; i++) {
-            powerUps.add(new Point(rand.nextInt(350) + 10, 180));
-        }
+        for (int i = 0; i < 2; i++) powerUps.add(new Point(rand.nextInt(350) + 10, 180));
     }
 
     private void generateEnemies() {
         Random rand = new Random();
-        for (int i = 0; i < 2; i++) {
-            enemies.add(new Point(rand.nextInt(350) + 10, 220));
-        }
+        for (int i = 0; i < 2; i++) enemies.add(new Point(rand.nextInt(350) + 10, 220));
     }
 
     @Override
@@ -76,32 +62,25 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
 
         if (!isGameOver) {
             g.setColor(Color.RED);
-            g.fillRect(x, y, 30, 30); // player
+            g.fillRect(x, y, 30, 30); // Player
 
             g.setColor(Color.YELLOW);
-            for (Point coin : coins) {
-                g.fillOval(coin.x, coin.y, 10, 10);
-            }
+            for (Point coin : coins) g.fillOval(coin.x, coin.y, 10, 10);
 
             g.setColor(Color.BLACK);
-            for (Point obstacle : obstacles) {
-                g.fillRect(obstacle.x, obstacle.y, 20, 20);
-            }
+            for (Point obstacle : obstacles) g.fillRect(obstacle.x, obstacle.y, 20, 20);
 
             g.setColor(Color.PINK);
-            for (Point powerUp : powerUps) {
-                g.fillOval(powerUp.x, powerUp.y, 15, 15);
-            }
+            for (Point powerUp : powerUps) g.fillOval(powerUp.x, powerUp.y, 15, 15);
 
             g.setColor(Color.MAGENTA);
-            for (Point enemy : enemies) {
-                g.fillRect(enemy.x, enemy.y, 20, 20);
-            }
+            for (Point enemy : enemies) g.fillRect(enemy.x, enemy.y, 20, 20);
 
             g.setColor(Color.BLACK);
             g.setFont(new Font("Arial", Font.BOLD, 14));
             g.drawString("Score: " + score, 10, 20);
             g.drawString("Health: " + health, 300, 40);
+            g.drawString("Time: " + (System.currentTimeMillis() - startTime) / 1000 + "s", 10, 35);
 
             if (hasSpeedBoost) {
                 g.setColor(Color.BLUE);
@@ -113,6 +92,7 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
                 g.setColor(Color.BLUE);
                 g.drawString("Paused", 160, 120);
             }
+
         } else {
             g.setFont(new Font("Arial", Font.BOLD, 20));
             g.setColor(Color.RED);
@@ -141,12 +121,26 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
             if (x > 370) x = 370;
 
             if (hasSpeedBoost) {
-                velocityX = 10;
+                velocityX = velocityX > 0 ? 10 : velocityX < 0 ? -10 : 0;
                 powerUpTimer++;
                 if (powerUpTimer > 200) {
                     hasSpeedBoost = false;
                     powerUpTimer = 0;
                 }
+            }
+
+            if (isInvincible) {
+                invincibilityTimer++;
+                if (invincibilityTimer > 100) {
+                    isInvincible = false;
+                    invincibilityTimer = 0;
+                }
+            }
+
+            for (Point enemy : enemies) {
+                enemy.x += (Math.random() < 0.5 ? -2 : 2);
+                if (enemy.x < 0) enemy.x = 0;
+                if (enemy.x > 370) enemy.x = 370;
             }
 
             checkCollisions();
@@ -167,7 +161,7 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
             if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(obstacle.x, obstacle.y, 20, 20))) {
                 isGameOver = true;
                 repaint();
-                break;
+                return;
             }
         }
 
@@ -182,13 +176,21 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
 
         for (Point enemy : enemies) {
             if (new Rectangle(x, y, 30, 30).intersects(new Rectangle(enemy.x, enemy.y, 20, 20))) {
-                health--;
-                if (health <= 0) {
-                    isGameOver = true;
+                if (!isInvincible) {
+                    health--;
+                    isInvincible = true;
+                    if (health <= 0) isGameOver = true;
                 }
-                repaint();
                 break;
             }
+        }
+
+        if (coins.isEmpty()) {
+            checkpoint = new Point(x, y);
+            generateCoins();
+            generateObstacles();
+            generatePowerUps();
+            generateEnemies();
         }
     }
 
@@ -237,8 +239,8 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     public void keyTyped(KeyEvent e) {}
 
     private void restartGame() {
-        x = 50;
-        y = 200;
+        x = checkpoint.x;
+        y = checkpoint.y;
         velocityY = 0;
         velocityX = 0;
         isJumping = false;
@@ -249,6 +251,9 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         isPaused = false;
         hasSpeedBoost = false;
         powerUpTimer = 0;
+        isInvincible = false;
+        invincibilityTimer = 0;
+        startTime = System.currentTimeMillis();
 
         coins.clear();
         obstacles.clear();
