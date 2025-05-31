@@ -89,3 +89,20 @@ Pause/Resume Feature
 
 Background Music Toggle (structure only, no audio engine)
 
+ Features Summary:
+Jump + Double Jump
+
+Coins, Obstacles, Power-Ups
+
+Enemies with movement
+
+Speed boost
+
+Invincibility after hit
+
+Timer & Health system
+
+Pause and Restart
+
+Checkpoint & Level system
+
